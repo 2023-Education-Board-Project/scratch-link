@@ -426,9 +426,22 @@ class BLESession: Session, SwiftCBCentralManagerDelegate, SwiftCBPeripheralDeleg
                 return
             }
 
+            let optService: CBService? = endpoint.service
+            guard let service = optService else {
+                completion(nil, JSONRPCError.invalidRequest(data: "failed to find endpoint.service"))
+                return
+            }
+            
+            let optPeripheral: CBPeripheral? = service.peripheral
+            guard let peripheral = optPeripheral else {
+                completion(nil, JSONRPCError.invalidRequest(data: "failed to find endpoint.service.peripheral"))
+                return
+            }
+
             self.watchedCharacteristics.remove(endpoint)
 
-            endpoint.service.peripheral.setNotifyValue(false, for: endpoint)
+            //past : endpoint.service.peripheral.setNotifyValue(false, for: endpoint)
+            peripheral.setNotifyValue(false, for: endpoint)
         }
     }
 
