@@ -2,7 +2,7 @@ import Foundation
 import PerfectWebSockets
 
 // TODO: implement remaining JSON-RPC 2.0 features like batching
-class Session {
+class Session : NSObject {
     // Keep this in sync with the version number in `NetworkProtocol.md`
     private let NetworkProtocolVersion: String = "1.2"
 
