@@ -2,6 +2,7 @@ import Foundation
 import IOBluetooth
 import PerfectWebSockets
 
+/*
 class BTSession: Session, IOBluetoothRFCOMMChannelDelegate, IOBluetoothDeviceInquiryDelegate {
     private var inquiry: IOBluetoothDeviceInquiry
     private var connectedChannel: IOBluetoothRFCOMMChannel?
@@ -217,3 +218,4 @@ class BTSession: Session, IOBluetoothRFCOMMChannelDelegate, IOBluetoothDeviceInq
         sendRemoteRequest("didReceiveMessage", withParams: responseData)
     }
 }
+*/

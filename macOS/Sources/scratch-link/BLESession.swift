@@ -48,6 +48,8 @@ class BLESession: Session, SwiftCBCentralManagerDelegate, SwiftCBPeripheralDeleg
     }
 
     required init(withSocket webSocket: WebSocket) throws {
+        
+        print("in init")
         self.central = CBCentralManager()
         self.centralDelegateHelper = CBCentralManagerDelegateHelper()
         self.peripheralDelegateHelper = CBPeripheralDelegateHelper()
@@ -59,6 +61,7 @@ class BLESession: Session, SwiftCBCentralManagerDelegate, SwiftCBPeripheralDeleg
         self.centralDelegateHelper.delegate = self
         self.central.delegate = self.centralDelegateHelper
         self.peripheralDelegateHelper.delegate = self
+        print("init end")
     }
 
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
@@ -423,25 +426,28 @@ class BLESession: Session, SwiftCBCentralManagerDelegate, SwiftCBPeripheralDeleg
 
             guard let endpoint = endpoint else {
                 completion(nil, JSONRPCError.invalidRequest(data: "failed to find characteristic"))
+                print("endpoint out")
                 return
             }
-
+            /*
             let optService: CBService? = endpoint.service
             guard let service = optService else {
-                completion(nil, JSONRPCError.invalidRequest(data: "failed to find endpoint.service"))
+                //completion(nil, JSONRPCError.invalidRequest(data: "failed to find endpoint.service"))
+                print("service out")
                 return
             }
             
             let optPeripheral: CBPeripheral? = service.peripheral
             guard let peripheral = optPeripheral else {
-                completion(nil, JSONRPCError.invalidRequest(data: "failed to find endpoint.service.peripheral"))
+                //completion(nil, JSONRPCError.invalidRequest(data: "failed to find endpoint.service.peripheral"))
+                print("peripheral out")
                 return
             }
-
+             */
             self.watchedCharacteristics.remove(endpoint)
 
-            //past : endpoint.service.peripheral.setNotifyValue(false, for: endpoint)
-            peripheral.setNotifyValue(false, for: endpoint)
+            endpoint.service?.peripheral?.setNotifyValue(false, for: endpoint)
+            //peripheral.setNotifyValue(false, for: endpoint)
         }
     }
 

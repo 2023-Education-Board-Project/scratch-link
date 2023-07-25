@@ -2,7 +2,7 @@ import Foundation
 import PerfectWebSockets
 
 // TODO: implement remaining JSON-RPC 2.0 features like batching
-class Session : NSObject {
+class Session {
     // Keep this in sync with the version number in `NetworkProtocol.md`
     private let NetworkProtocolVersion: String = "1.2"
 
@@ -23,29 +23,40 @@ class Session : NSObject {
     }
 
     func handleSession(webSocket: WebSocket) {
-        var message = ""
-        var keepGoing = true
-
-        while keepGoing {
-            socketReadSemaphore.wait()
-            // Perfect will automatically convert binary messages to look like text messages
-            // TODO: consider inspecting `op` for text/binary so we can send a matched response
-            webSocket.readStringMessage { text, _, isFinal in
-                self.socketReadSemaphore.signal()
-                guard let text = text else {
-                    // This block will be executed if, for example, the browser window is closed.
-                    keepGoing = false
-                    self.sessionWasClosed()
-                    return
+            var message = ""
+            var keepGoing = true
+            
+            print("handle session start")
+            
+            while keepGoing {
+                print("keep going")
+                print("start sema wait\(Thread.current)")
+                self.socketReadSemaphore.wait()
+                print("end sema wait\(Thread.current)")
+                // Perfect will automatically convert binary messages to look like text messages
+                // TODO: consider inspecting `op` for text/binary so we can send a matched response
+                webSocket.readStringMessage { text, _, isFinal in
+                    self.socketReadSemaphore.signal()
+                    print("unlock \(Thread.current)")
+                    guard let text = text else {
+                        // This block will be executed if, for example, the browser window is closed.
+                        keepGoing = false
+                        self.sessionWasClosed()
+                        
+                        print("not text")
+                        
+                        return
+                    }
+                    message.append(contentsOf: text)
+                    if isFinal {
+                        let wholeMessage = message
+                        message = ""
+                        self.didReceiveText(wholeMessage)
+                    }
                 }
-                message.append(contentsOf: text)
-                if isFinal {
-                    let wholeMessage = message
-                    message = ""
-                    self.didReceiveText(wholeMessage)
-                }
+                print("end reading string message")
             }
-        }
+            print("handle session end")
     }
 
     // Override this to clean up session-specific resources, if any.
