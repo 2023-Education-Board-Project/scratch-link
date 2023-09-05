@@ -6,7 +6,7 @@ let SDMPort: Int = 20111
 
 enum SDMRoute: String {
     case bluetoothLowEnergy = "/scratch/ble"
-    case bluetooth = "/scratch/bt"
+    //case bluetooth = "/scratch/bt"
 }
 
 enum InitializationError: Error {
@@ -108,7 +108,7 @@ class ScratchLink: NSObject, NSApplicationDelegate {
 
     func initServer() throws {
         sessionManagers[SDMRoute.bluetoothLowEnergy.rawValue] = SessionManager<BLESession>()
-        sessionManagers[SDMRoute.bluetooth.rawValue] = SessionManager<BTSession>()
+        //sessionManagers[SDMRoute.bluetooth.rawValue] = SessionManager<BTSession>()
 
         var routes = Routes()
         routes.add(method: .get, uri: "/scratch/*", handler: requestHandler)
