@@ -183,7 +183,12 @@ class ScratchLink: NSObject, NSApplicationDelegate {
                 try sessionManager
                     .makeSessionHandler(forRequest: request)
                     .handleRequest(request: request, response: response)
+                print("Session end!!!")
+
             } catch {
+                
+                print("make session handler failed!!!")
+                
                 response.setBody(string: "Session init failed")
                 response.setHeader(.contentLength, value: "\(response.bodyBytes.count)")
                 response.completed(status: .internalServerError)
