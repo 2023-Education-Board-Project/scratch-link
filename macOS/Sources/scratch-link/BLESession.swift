@@ -261,6 +261,8 @@ class BLESession: Session, SwiftCBCentralManagerDelegate, SwiftCBPeripheralDeleg
     }
 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+        print("in peripheral")
+        
         if peripheral != connectedPeripheral {
             print("didDiscoverServices on wrong peripheral")
             return
@@ -278,9 +280,13 @@ class BLESession: Session, SwiftCBCentralManagerDelegate, SwiftCBPeripheralDeleg
         }
 
         connectionCompletion = nil
+        
+        print("out peripheral")
     }
 
     func write(withParams params: [String: Any], completion: @escaping JSONRPCCompletionHandler) throws {
+        print("in write func")
+        
         let buffer = try EncodingHelpers.decodeBuffer(fromJSON: params)
         let withResponse = params["withResponse"] as? Bool
 
@@ -305,14 +311,23 @@ class BLESession: Session, SwiftCBCentralManagerDelegate, SwiftCBPeripheralDeleg
             // If the client specified a write type, honor that.
             // Otherwise, if the characteristic claims to support writing without response, do that.
             // Otherwise, write with response.
+            
+            print("write endpoint : ", endpoint)
+            print("buffer : ", buffer.base64EncodedString())
+            
             let writeType = (withResponse ?? !endpoint.properties.contains(.writeWithoutResponse)) ?
                 CBCharacteristicWriteType.withResponse : CBCharacteristicWriteType.withoutResponse
             peripheral.writeValue(buffer, for: endpoint, type: writeType)
             completion(buffer.count, nil)
         }
+        
+        print("out write func")
     }
 
     private func read(withParams params: [String: Any], completion: @escaping JSONRPCCompletionHandler) throws {
+        
+        print("Start Read func")
+        
         let requestedEncoding = params["encoding"] as? String ?? "base64"
         let startNotifications = params["startNotifications"] as? Bool ?? false
 
@@ -355,16 +370,23 @@ class BLESession: Session, SwiftCBCentralManagerDelegate, SwiftCBPeripheralDeleg
             }
 
             if startNotifications {
+                
+                print("In startNotifications : ", startNotifications)
+                
                 self.watchedCharacteristics.insert(endpoint)
                 peripheral.setNotifyValue(true, for: endpoint)
             }
 
             peripheral.readValue(for: endpoint)
+            
+            print("End Read func: ", endpoint)
         }
     }
 
     private func startNotifications(withParams params: [String: Any],
                                     completion: @escaping JSONRPCCompletionHandler) {
+        print("in startNotifications")
+        
         getEndpoint(for: "notification request", withParams: params, blockedBy: .ExcludeReads) { endpoint, error in
             if let error = error {
                 completion(nil, error)
@@ -382,15 +404,21 @@ class BLESession: Session, SwiftCBCentralManagerDelegate, SwiftCBPeripheralDeleg
                 completion(nil, JSONRPCError.internalError(data: "failed to find characteristic"))
                 return
             }
-
+            
+            print("endpoint: ", endpoint)
+            
             self.watchedCharacteristics.insert(endpoint)
             peripheral.setNotifyValue(true, for: endpoint)
 
             completion(nil, nil)
         }
+        
+        print("out startNotifications")
     }
 
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        //print("in update peripheral")
+        
         if peripheral != connectedPeripheral {
             print("didUpdateValueFor characteristic on wrong peripheral")
             return
@@ -416,9 +444,14 @@ class BLESession: Session, SwiftCBCentralManagerDelegate, SwiftCBPeripheralDeleg
 
             sendRemoteRequest("characteristicDidChange", withParams: json)
         }
+        
+        //print("out update peripheral")
     }
 
     private func stopNotifications(withParams params: [String: Any], completion: @escaping JSONRPCCompletionHandler) {
+        
+        print("Stop notifications start")
+        
         getEndpoint(for: "stopNotifications request", withParams: params, blockedBy: .ExcludeReads) { endpoint, error in
             if let error = error {
                 completion(nil, error)
@@ -448,6 +481,7 @@ class BLESession: Session, SwiftCBCentralManagerDelegate, SwiftCBPeripheralDeleg
 
             endpoint.service?.peripheral?.setNotifyValue(false, for: endpoint)
             //peripheral.setNotifyValue(false, for: endpoint)
+            print("Stop notifications end")
         }
     }
 
@@ -558,29 +592,63 @@ class BLESession: Session, SwiftCBCentralManagerDelegate, SwiftCBPeripheralDeleg
 
     override func didReceiveCall(_ method: String, withParams params: [String: Any],
                                  completion: @escaping JSONRPCCompletionHandler) throws {
+        print("In didReceiveCall")
+        
         switch method {
         case "discover":
+            print("discover start")
+            
             try discover(withParams: params, completion: completion)
+            
+            print("discover end")
         case "connect":
+            print("connect start")
+            
             try connect(withParams: params, completion: completion)
+            
+            print("connect end")
         case "write":
+            print("write start")
+            
             try write(withParams: params, completion: completion)
+            
+            print("write end")
         case "read":
+            print("read start")
+            
             try read(withParams: params, completion: completion)
+            
+            print("read end")
         case "startNotifications":
+            print("startNotifications start")
+            
             startNotifications(withParams: params, completion: completion)
+            
+            print("startNotifications end")
         case "stopNotifications":
+            print("stopNotifications start")
+            
             stopNotifications(withParams: params, completion: completion)
+            
+            print("stopNotifications end")
         case "getServices":
+            print("getService start")
+            
             var services = [String]()
             connectedPeripheral?.services?.forEach{
                 services.append(getCanonicalUUIDString(uuid: $0.uuid.uuidString))
             }
             completion(services, nil)
+            
+            print("getService end")
         default:
             // unrecognized method: pass to base class
+            print("default start")
             try super.didReceiveCall(method, withParams: params, completion: completion)
+            print("default end")
         }
+        
+        print("End didReceiveCall")
     }
 }
 

@@ -25,36 +25,37 @@ class Session {
     func handleSession(webSocket: WebSocket) {
             var message = ""
             var keepGoing = true
+        
+            var past = ""
             
             print("handle session start")
             
             while keepGoing {
-                print("keep going")
-                print("start sema wait\(Thread.current)")
+                print("keep going... past text is : ", past)
                 self.socketReadSemaphore.wait()
-                print("end sema wait\(Thread.current)")
                 // Perfect will automatically convert binary messages to look like text messages
                 // TODO: consider inspecting `op` for text/binary so we can send a matched response
                 webSocket.readStringMessage { text, _, isFinal in
                     self.socketReadSemaphore.signal()
-                    print("unlock \(Thread.current)")
                     guard let text = text else {
                         // This block will be executed if, for example, the browser window is closed.
                         keepGoing = false
-                        self.sessionWasClosed()
                         
                         print("not text")
                         
+                        self.sessionWasClosed()
                         return
                     }
+                    print("text:", text)
                     message.append(contentsOf: text)
+                    print(message)
                     if isFinal {
                         let wholeMessage = message
                         message = ""
                         self.didReceiveText(wholeMessage)
                     }
+                    past = text
                 }
-                print("end reading string message")
             }
             print("handle session end")
     }
